@@ -1,8 +1,6 @@
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from werkzeug.security import generate_password_hash
-import secrets
-import hashlib
 
 PUBLIC_HOLIDAYS = {
     date(2025, 1, 26),
@@ -83,20 +81,5 @@ def mark_attendance(emp, in_time, out_time):
         if today_str not in emp["present_days"]:
             emp["present_days"].append(today_str)
 
-# hash_generator
-"""raw_password = "Hr@123" 
-print(generate_password_hash(raw_password))
 
-
-# Generate a random token
-raw_token = secrets.token_hex(32)  # 64 hex characters
-print("Raw token (give this to user):", raw_token)
-
-# Store a hashed version in the database
-hashed_token = hashlib.sha256(raw_token.encode()).hexdigest()
-print("Hashed token:", hashed_token)
-
-
-import hashlib
-print(hashlib.sha256("mysecrettoken".encode()).hexdigest())"""
-
+#print(generate_password_hash("admin@123"))
