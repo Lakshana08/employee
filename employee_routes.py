@@ -41,33 +41,49 @@ def login():
 
     return jsonify({"access_token": token})
 
-# GET all or one employee - HR only
+# helper to filter only professional fields
+def only_professional_fields(emp_copy):
+    return {
+        "id": emp_copy["id"],
+        "name": emp_copy["name"],
+        "role": emp_copy["role"],
+        "department": emp_copy.get("department", "Not Assigned"),
+        "experience": emp_copy["experience"],
+        "amenities": emp_copy["amenities"],
+        "in_time": emp_copy.get("in_time"),
+        "out_time": emp_copy.get("out_time"),
+        "work_hours": emp_copy["work_hours"],
+        "salary": emp_copy["salary_computed"],
+        "leave_info": emp_copy["leave_info"],
+        "ongoing_project": emp_copy.get("ongoing_project", []),
+        "completed_project": emp_copy.get("completed_project", []),
+    }
+
+# GET all employee - HR only (but without personal details)
 @employee_bp.get("/employees")
 @jwt_required()
 def get_employees():
-    if get_jwt():
-        claims = get_jwt()
-        if claims.get("role") != "HR":
-            return jsonify({"message": "Only HR can view employee details"}), 403
+    claims = get_jwt()
+    if claims.get("role") != "HR":
+        return jsonify({"message": "Not authorized to view employee's details"}), 403
 
-        emp_id = request.args.get("id")
-        if emp_id:
-            emp_id = int(emp_id)
-            employee = employees.get(emp_id)
-            if employee:
-                emp_copy = build_employee_profile(employees[emp_id])
-                return jsonify({str(emp_id): emp_copy})
-            else:
-                return jsonify({"error": "Employee not found"}), 404
+    emp_id = request.args.get("id")
+    if emp_id:
+        emp_id = int(emp_id)
+        employee = employees.get(emp_id)
+        if not employee:
+            return jsonify({"error": "Employee not found"}), 404
 
-        employees_with_extra = {}
-        for emp_id, emp in employees.items():
-            emp_copy = build_employee_profile(employees[emp_id])
-            employees_with_extra[str(emp_id)] = emp_copy
-        return jsonify(employees_with_extra)
-    
-    else:
-        return {"msg": "token not sent"}
+        emp_copy = build_employee_profile(employee)
+        return jsonify({str(emp_id): only_professional_fields(emp_copy)})
+
+    employees_with_extra = {}
+    for emp_id, emp in employees.items():
+        emp_copy = build_employee_profile(emp)
+        employees_with_extra[str(emp_id)] = only_professional_fields(emp_copy)
+
+    return jsonify(employees_with_extra)
+
 
 # POST add employee
 @employee_bp.post("/add_employee")
@@ -75,7 +91,7 @@ def get_employees():
 def add_employee():
     claims = get_jwt()
     if claims.get("role") != "HR":   # only HR can add
-        return jsonify({"message": "HR only!"}), 403
+        return jsonify({"message": "Not authorized to add employee"}), 403
     data = request.get_json()
     emp_id = int(data["id"])
     if emp_id in employees:
@@ -139,8 +155,8 @@ def update_employee(emp_id):
 @jwt_required()
 def delete_employee(emp_id):
     claims = get_jwt()
-    if claims.get("role") != "HR":   # only HR can add
-        return jsonify({"message": "HR only!"}), 403
+    if claims.get("role") != "HR":   # only HR can delete
+        return jsonify({"message": "Not authorized to delete employee"}), 403
     if emp_id in employees:
         employees.pop(emp_id)
         return jsonify({"message": "Employee deleted successfully"})
@@ -157,7 +173,7 @@ def get_employee_sections(emp_id, section):
 
     # Restrict personal details
     if section == "personal":
-        if claims.get("role") != "HR" and current_user_id != emp_id:
+        if current_user_id != emp_id:
             return jsonify({"message": "Not authorized to view other employee's personal details"}), 403
     if emp_id not in employees:
         return jsonify({"error": "Employee not found"}), 404
@@ -199,7 +215,7 @@ def get_employee_sections(emp_id, section):
     elif section == "professional":
         return jsonify({"professional": professional_fields})
     else:
-        personal_allowed = claims.get("role") == "HR" or current_user_id == emp_id
+        personal_allowed = current_user_id == emp_id
         professional_allowed = claims.get("role") in ["HR", "Manager", "Team Leader"] or current_user_id == emp_id
 
         result = {}

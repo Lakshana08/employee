@@ -83,3 +83,5 @@ def mark_attendance(emp, in_time, out_time):
 
 
 #print(generate_password_hash("admin@123"))
+#print(generate_password_hash("varun@123"))
+#print(generate_password_hash("priya@123"))
