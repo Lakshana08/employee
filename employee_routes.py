@@ -85,7 +85,7 @@ def get_employees():
     return jsonify(employees_with_extra)
 
 
-# POST add employee
+# POST add employee - only HR
 @employee_bp.post("/add_employee")
 @jwt_required()
 def add_employee():
@@ -116,9 +116,11 @@ def add_employee():
         "present_days": [],
         "password": hashed_password,
         "address": data.get("address", ""),
-        "email": data.get("email", "")
+        "email": data.get("email", ""),
+        "aadhaar": data.get("aadhaar", ""),
+        "pan": data.get("pan", ""),
+        "account_num":data.get("account_num", "")
     }
-
 
     mark_attendance(employees[emp_id], data.get("in_time"), data.get("out_time"))
     emp_copy = build_employee_profile(employees[emp_id])
@@ -128,11 +130,11 @@ def add_employee():
     }), 201
 
 
-# PUT update employee
+# PUT update employee - HR/ Employee
 @employee_bp.put("/update_employee/<int:emp_id>")
 @jwt_required()
 def update_employee(emp_id):
-    if emp_id not in employees:
+    if emp_id not in employees: 
         return jsonify({"error": "Employee not found"}), 404
     
     claims = get_jwt()
@@ -150,7 +152,7 @@ def update_employee(emp_id):
 
     return jsonify({"message": "Employee updated successfully", "employee": emp_copy})
 
-# DELETE employee
+# DELETE employee - only HR
 @employee_bp.delete("/delete_employee/<int:emp_id>")
 @jwt_required()
 def delete_employee(emp_id):
@@ -192,14 +194,17 @@ def get_employee_sections(emp_id, section):
         "name": emp_copy["name"],
         "dob": emp_copy["dob"],
         "age": emp_copy["age"],
-        "department": emp_copy["department"],
-        "date_of_joining": emp_copy["date_of_joining"],
-        "experience": emp_copy["experience"],
         "address": emp_copy.get("address", ""),
-        "email": emp_copy.get("email", "")
+        "email": emp_copy.get("email", ""),
+        "aadhaar": emp_copy.get("aadhaar", ""),
+        "pan": emp_copy.get("pan", ""),
+        "account_num":emp_copy.get("account_num","")
     }
 
     professional_fields = {
+        "department": emp_copy["department"],
+        "date_of_joining": emp_copy["date_of_joining"],
+        "experience": emp_copy["experience"],
         "amenities": emp_copy["amenities"],
         "in_time": emp_copy.get("in_time"),
         "out_time": emp_copy.get("out_time"),
