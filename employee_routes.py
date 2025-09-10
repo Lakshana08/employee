@@ -10,6 +10,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_j
 # Create a blueprint object
 employee_bp = Blueprint("employee_bp", __name__)
 
+
 def build_employee_profile(emp):
     emp_copy = emp.copy()
     emp_copy["age"] = calculate_age(emp_copy["dob"])

@@ -8,5 +8,15 @@ jwt = JWTManager(app)
 
 app.register_blueprint(employee_bp, url_prefix="/employee")
 
+@jwt.unauthorized_loader
+def authorizing(err):
+    return{"Message":"Token is missing"}
+
+@jwt.invalid_token_loader
+def invalid(err):
+    return{"Message":"Invalid token"}
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
